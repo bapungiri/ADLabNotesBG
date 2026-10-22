@@ -38,14 +38,12 @@ jobs:
           token: ${{ secrets.NOTES_TOKEN }}
           path: content
 
-      - name: Home page (if the vault has none)
+      # publish only the 'adlab notes' folder (and the files its notes link to),
+      # with 'ADLab MOC' as the home page; see the script's docstring
+      - name: Prepare content
         run: |
           rm -rf content/.git
-          [ -f content/index.md ] || cp site/index.md content/index.md
-
-      # publish only the 'adlab notes' folder and the files its notes link to
-      - name: Remove unpublished notes and files
-        run: python3 scripts/prune_unpublished.py content "adlab notes"
+          python3 scripts/prune_unpublished.py content "adlab notes" --home "ADLab MOC"
 
       - uses: actions/setup-node@v4
         with:

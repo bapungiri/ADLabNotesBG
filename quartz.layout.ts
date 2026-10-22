@@ -8,8 +8,7 @@ export const sharedPageComponents: SharedLayout = {
   afterBody: [],
   footer: Component.Footer({
     links: {
-      GitHub: "https://github.com/jackyzha0/quartz",
-      "Discord Community": "https://discord.gg/cRFFHYye7t",
+      "Built with Quartz": "https://quartz.jzhao.xyz",
     },
   }),
 }
@@ -38,7 +37,28 @@ export const defaultContentPageLayout: PageLayout = {
         { Component: Component.ReaderMode() },
       ],
     }),
-    Component.Explorer(),
+    Component.Explorer({
+      // sections ("1 Project", ...) in numeric order, then within a folder the hub
+      // note first and the rest alphabetically
+      sortFn: (a, b) => {
+        const hubs = ["adlab-data-analysis", "adlab-model-fitting", "adlab-parameter-recovery"]
+        if (a.isFolder && b.isFolder) {
+          return a.slugSegment.localeCompare(b.slugSegment, undefined, { numeric: true })
+        }
+        if (a.isFolder !== b.isFolder) {
+          return a.isFolder ? -1 : 1
+        }
+        const ha = hubs.includes(a.slugSegment)
+        const hb = hubs.includes(b.slugSegment)
+        if (ha !== hb) {
+          return ha ? -1 : 1
+        }
+        return a.displayName.localeCompare(b.displayName, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
+      },
+    }),
   ],
   right: [
     Component.Graph(),
@@ -62,7 +82,28 @@ export const defaultListPageLayout: PageLayout = {
         { Component: Component.Darkmode() },
       ],
     }),
-    Component.Explorer(),
+    Component.Explorer({
+      // sections ("1 Project", ...) in numeric order, then within a folder the hub
+      // note first and the rest alphabetically
+      sortFn: (a, b) => {
+        const hubs = ["adlab-data-analysis", "adlab-model-fitting", "adlab-parameter-recovery"]
+        if (a.isFolder && b.isFolder) {
+          return a.slugSegment.localeCompare(b.slugSegment, undefined, { numeric: true })
+        }
+        if (a.isFolder !== b.isFolder) {
+          return a.isFolder ? -1 : 1
+        }
+        const ha = hubs.includes(a.slugSegment)
+        const hb = hubs.includes(b.slugSegment)
+        if (ha !== hb) {
+          return ha ? -1 : 1
+        }
+        return a.displayName.localeCompare(b.displayName, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
+      },
+    }),
   ],
   right: [],
 }

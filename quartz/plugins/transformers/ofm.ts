@@ -280,7 +280,13 @@ export const ObsidianFlavoredMarkdown: QuartzTransformerPlugin<Partial<Options>>
                 // treat as broken link if slug not in ctx.allSlugs
                 if (opts.disableBrokenWikilinks) {
                   const slug = slugifyFilePath(fp as FilePath)
-                  const exists = ctx.allSlugs && ctx.allSlugs.includes(slug)
+                  // links are resolved by shortest path ([[note]] finds folder/note),
+                  // so a bare name also exists if some page's slug ends in it
+                  // ([[#heading]] has no file part and points at the page itself)
+                  const exists =
+                    fp.trim() === "" ||
+                    (ctx.allSlugs &&
+                      ctx.allSlugs.some((s) => s === slug || s.endsWith("/" + slug)))
                   if (!exists) {
                     return {
                       type: "html",
