@@ -1,9 +1,10 @@
 ---
-title: Notes
+title: ADLab notes
+publish: true
 ---
 
-Notes from my Obsidian vault, rebuilt from `literature_notes` automatically.
+Notes on the ADLab two-armed bandit project, published from my Obsidian vault.
 
-- [[ADLab MOC]]: lab projects and analyses
+- [[ADLab MOC]]: map of the project
 - [[adlab data analysis]]: analysis write-ups
-- [[010 brain region]] · [[020 Topics]] · [[030 Experiments]] · [[040 Methods]]
+- [[adlab parameter recovery]]: can the models' parameters be recovered?

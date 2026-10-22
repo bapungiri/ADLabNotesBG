@@ -43,6 +43,10 @@ jobs:
           rm -rf content/.git
           [ -f content/index.md ] || cp site/index.md content/index.md
 
+      # opt-in: keep only notes with 'publish: true' and the files they link to
+      - name: Remove unpublished notes and files
+        run: python3 scripts/prune_unpublished.py content
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
