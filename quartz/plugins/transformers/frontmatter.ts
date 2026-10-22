@@ -63,11 +63,21 @@ export const FrontMatter: QuartzTransformerPlugin<Partial<Options>> = (userOpts)
         () => {
           return (_, file) => {
             const fileData = Buffer.from(file.value as Uint8Array)
+            // Obsidian tolerates malformed frontmatter (e.g. Zotero-import notes with
+            // unquoted '[[..]]' values); treat it as empty instead of failing the build.
+            const safeLoad = (load: () => object) => {
+              try {
+                return load() ?? {}
+              } catch {
+                console.warn(`Ignoring malformed frontmatter in ${file.data.filePath}`)
+                return {}
+              }
+            }
             const { data } = matter(fileData, {
               ...opts,
               engines: {
-                yaml: (s) => yaml.load(s, { schema: yaml.JSON_SCHEMA }) as object,
-                toml: (s) => toml.parse(s) as object,
+                yaml: (s) => safeLoad(() => yaml.load(s, { schema: yaml.JSON_SCHEMA }) as object),
+                toml: (s) => safeLoad(() => toml.parse(s) as object),
               },
             })
 

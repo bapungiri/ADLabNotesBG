@@ -1,0 +1,67 @@
+# Build the Quartz site from the private 'literature_notes' vault and publish it
+# to GitHub Pages. Runs every 6 hours, on a push to this repo, when the notes
+# repo asks for it (repository_dispatch 'notes-updated'), and by hand from the
+# Actions tab.
+#
+# Needs a repository secret NOTES_TOKEN: a fine-grained token with read-only
+# 'Contents' access to bapungiri/literature_notes.
+name: Deploy site
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [notes-updated]
+  push:
+    branches: [v4]
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch notes
+        uses: actions/checkout@v4
+        with:
+          repository: bapungiri/literature_notes
+          token: ${{ secrets.NOTES_TOKEN }}
+          path: content
+
+      - name: Home page (if the vault has none)
+        run: |
+          rm -rf content/.git
+          [ -f content/index.md ] || cp site/index.md content/index.md
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx quartz build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
