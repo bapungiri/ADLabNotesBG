@@ -43,9 +43,9 @@ jobs:
           rm -rf content/.git
           [ -f content/index.md ] || cp site/index.md content/index.md
 
-      # opt-in: keep only notes with 'publish: true' and the files they link to
+      # publish only the 'adlab notes' folder and the files its notes link to
       - name: Remove unpublished notes and files
-        run: python3 scripts/prune_unpublished.py content
+        run: python3 scripts/prune_unpublished.py content "adlab notes"
 
       - uses: actions/setup-node@v4
         with:

@@ -71,8 +71,9 @@ const config: QuartzConfig = {
       Plugin.Description(),
       Plugin.Latex({ renderEngine: "katex" }),
     ],
-    // opt-in: only notes with 'publish: true' (scripts/prune_unpublished.py also drops the rest)
-    filters: [Plugin.ExplicitPublish()],
+    // what's published is decided by scripts/prune_unpublished.py (the 'adlab notes'
+    // folder); 'draft: true' still hides a note
+    filters: [Plugin.RemoveDrafts()],
     emitters: [
       Plugin.AliasRedirects(),
       Plugin.ComponentResources(),
