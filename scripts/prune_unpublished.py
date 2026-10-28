@@ -12,9 +12,10 @@
    only orders the sections (see the explorer sortFn in quartz.layout.ts).
 5. The note named by --home (default 'ADLab MOC') becomes the home page; links
    to it still work through an alias.
-6. List-callout markers ('- ? Questions', '- @ Thoughts': the Obsidian List
-   Callouts plugin) are removed, leaving plain bullets; Quartz would show the
-   marker as text, and a lone '$' could open inline math.
+6. List callouts (the Obsidian List Callouts plugin: '- ? **Questions:**'
+   with indented bullets under it) become Quartz callouts, coloured by marker
+   ('> [!question] Questions' with the bullets inside). Markers on indented
+   lines are just removed; Quartz would show them as text.
 
 A note can be hidden with 'draft: true' in its frontmatter.
 
@@ -32,8 +33,39 @@ MDLINK = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)")
 FRONT = re.compile(r"\A---\r?\n(.*?)\r?\n---[ \t]*\r?\n?", re.S)
 PREFIX = re.compile(r"^adlab\s+", re.I)
 SECTION_NUMBER = re.compile(r"^\d+\s+")
-# marker characters configured in the vault's List Callouts plugin
-LIST_CALLOUT = re.compile(r"^(\s*[-*+]\s+)(?:--|[&?!~@$+])[ \t]+", re.M)
+# marker characters configured in the vault's List Callouts plugin, and the
+# Quartz callout type closest to each marker's colour there
+CALLOUT_TYPE = {"?": "question", "~": "example", "!": "danger", "@": "tip",
+                "$": "success", "&": "warning", "+": "quote", "--": "note"}
+MARKER = r"(?:--|[&?!~@$+])"
+TOP_CALLOUT = re.compile(rf"^[-*+][ \t]+({MARKER})[ \t]+(.*)$")
+LIST_CALLOUT = re.compile(rf"^(\s*[-*+]\s+){MARKER}[ \t]+", re.M)
+
+
+def list_callouts_to_quartz(text):
+    """'- ? **Questions:**' plus its indented lines -> '> [!question] Questions'
+    with those lines, dedented, inside the callout."""
+    lines = text.split("\n")
+    out, i = [], 0
+    while i < len(lines):
+        m = TOP_CALLOUT.match(lines[i])
+        if not m:
+            out.append(lines[i])
+            i += 1
+            continue
+        title = re.sub(r"^\*\*(.*?)\*\*", r"\1", m.group(2).strip()).rstrip(":").strip()
+        body = []
+        i += 1
+        while i < len(lines) and lines[i][:1] in (" ", "\t") and lines[i].strip():
+            body.append(lines[i])
+            i += 1
+        indent = min((len(b) - len(b.lstrip()) for b in body), default=0)
+        if out and out[-1].strip():
+            out.append("")
+        out.append(f"> [!{CALLOUT_TYPE[m.group(1)]}] {title}")
+        out.extend(f"> {b[indent:]}" for b in body)
+        out.append("")
+    return "\n".join(out)
 HOME_TITLE = "ADLab"
 
 
@@ -94,7 +126,7 @@ def main(root, folder, home):
 
     for n in notes:
         text = n.read_text(encoding="utf-8")
-        plain = LIST_CALLOUT.sub(r"\1", text)
+        plain = LIST_CALLOUT.sub(r"\1", list_callouts_to_quartz(text))
         if plain != text:
             n.write_text(plain, encoding="utf-8")
 
