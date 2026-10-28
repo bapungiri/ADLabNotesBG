@@ -12,6 +12,9 @@
    only orders the sections (see the explorer sortFn in quartz.layout.ts).
 5. The note named by --home (default 'ADLab MOC') becomes the home page; links
    to it still work through an alias.
+6. List-callout markers ('- ? Questions', '- @ Thoughts': the Obsidian List
+   Callouts plugin) are removed, leaving plain bullets; Quartz would show the
+   marker as text, and a lone '$' could open inline math.
 
 A note can be hidden with 'draft: true' in its frontmatter.
 
@@ -29,6 +32,8 @@ MDLINK = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)")
 FRONT = re.compile(r"\A---\r?\n(.*?)\r?\n---[ \t]*\r?\n?", re.S)
 PREFIX = re.compile(r"^adlab\s+", re.I)
 SECTION_NUMBER = re.compile(r"^\d+\s+")
+# marker characters configured in the vault's List Callouts plugin
+LIST_CALLOUT = re.compile(r"^(\s*[-*+]\s+)(?:--|[&?!~@$+])[ \t]+", re.M)
 HOME_TITLE = "ADLab"
 
 
@@ -86,6 +91,12 @@ def main(root, folder, home):
     for d in sorted((d for d in root.rglob("*") if d.is_dir()), reverse=True):
         if not any(d.iterdir()):
             d.rmdir()
+
+    for n in notes:
+        text = n.read_text(encoding="utf-8")
+        plain = LIST_CALLOUT.sub(r"\1", text)
+        if plain != text:
+            n.write_text(plain, encoding="utf-8")
 
     # home page, short titles, section folder pages
     home_note = next((n for n in notes if n.stem == home), None)
